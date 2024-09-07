@@ -8,8 +8,8 @@ Segunda parte del modelo de clasificación para predecir el desempeño de estudi
 
 2. Cargar todos los archivos en Google Colab y Drive
    
-3. Reemplazar la Ruta del Archivo
-   En el código proporcionado en el cuaderno, reemplaza la ruta de los archivos CSV con las rutas a los archivos que has subido.
+3. Reemplazar la ruta del archivo
+   En el código proporcionado en el cuaderno, reemplaza la ruta de los archivos CSV con las rutas a los archivos que has subido a Drive.
 
 4. Ejecutar el código en el orden indicado.
 
