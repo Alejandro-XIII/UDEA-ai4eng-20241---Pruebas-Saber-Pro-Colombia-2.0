@@ -6,7 +6,7 @@ Segunda parte del modelo de clasificación para predecir el desempeño de estudi
 1. Descargar los Archivos
    Descarga los archivos necesarios desde el repositorio. Asegúrate de tener los archivos CSV de la competencia de [Kaggle](https://www.kaggle.com/competitions/udea-ai4eng-20241).
 
-2. Cargar todos los archivos en Google Colab
+2. Cargar todos los archivos en Google Colab y Drive
    
 3. Reemplazar la Ruta del Archivo
    En el código proporcionado en el cuaderno, reemplaza la ruta de los archivos CSV con las rutas a los archivos que has subido.
