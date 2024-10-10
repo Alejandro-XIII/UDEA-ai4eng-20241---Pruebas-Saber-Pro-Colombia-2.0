@@ -1,17 +1,18 @@
-# Usa una imagen base de Python
-FROM python:3.10-slim
+# Usar una imagen base de Python
+FROM python:3.10
 
-# Establece el directorio de trabajo en el contenedor
+# Establecer el directorio de trabajo
 WORKDIR /app
 
-# Copia los archivos necesarios al contenedor
-COPY scripts/train.py /app/train.py
-COPY scripts/predict.py /app/predict.py
-COPY data/train.csv /app/data/train.csv
-COPY requirements.txt /app/requirements.txt
+# Copiar los archivos necesarios al contenedor
+COPY requirements.txt .
+COPY scripts/train.py .
 
-# Instala las dependencias
+# Instalar las dependencias
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Comando por defecto al ejecutar el contenedor (ajusta según sea necesario)
-CMD ["python", "train.py", "--data_file", "data/train.csv", "--model_file", "model.json", "--overwrite_model"]
+# Crear un directorio para los datos
+RUN mkdir data
+
+# Definir el comando por defecto
+ENTRYPOINT ["python", "train.py"]
