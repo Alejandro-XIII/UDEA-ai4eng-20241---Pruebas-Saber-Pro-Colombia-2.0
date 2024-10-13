@@ -1,82 +1,68 @@
-import argparse
-import logging
-import os
+import subprocess
+
+print("Instalando los paquetes desde el archivo requirements.txt")
+subprocess.call(['pip', 'install', '-r', 'requirements.txt'])
+
+print("Importando librerías")
 import pandas as pd
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import LabelEncoder
+import joblib
 
-# Configurar el logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+print("Cargando los datos desde el archivo CSV...")
+df_train = pd.read_csv('../data/train.csv')
 
-# Función para cargar los datos
-def load_data(file_path):
-    logger.info("Loading train data")
-    data = pd.read_csv(file_path)
-    logger.info("Data types:\n%s", data.dtypes)
-    return data
+print("Rellenando valores faltantes con la moda de cada columna...")
+columns_with_missing_values = [
+    'ESTU_VALORMATRICULAUNIVERSIDAD', 'ESTU_HORASSEMANATRABAJA',
+    'FAMI_ESTRATOVIVIENDA', 'FAMI_TIENEINTERNET',
+    'FAMI_EDUCACIONPADRE', 'FAMI_TIENELAVADORA',
+    'FAMI_TIENEAUTOMOVIL', 'ESTU_PAGOMATRICULAPROPIO',
+    'FAMI_TIENECOMPUTADOR', 'FAMI_TIENEINTERNET.1',
+    'FAMI_EDUCACIONMADRE'
+]
+mode_values = {column: df_train[column].mode()[0] for column in columns_with_missing_values}
+df_train.fillna(value=mode_values, inplace=True)
 
-# Función para convertir las columnas categóricas a numéricas
-def preprocess_data(df):
-    logger.info("Converting categorical columns")
-    
-    # Convertir todas las columnas categóricas a numéricas
-    label_encoders = {}
-    for column in df.select_dtypes(include='object').columns:
-        le = LabelEncoder()
-        df[column] = le.fit_transform(df[column].astype(str))
-        label_encoders[column] = le
-    
-    return df, label_encoders
+print("Aplicando la codificación one-hot a las columnas categóricas...")
+#ESTU_PRGM_ACADEMICO no se agrega porque tiene muchas columnas
+columns_to_exclude = ['ID', 'PERIODO', 'ESTU_PRGM_ACADEMICO', 'RENDIMIENTO_GLOBAL']
+columns_to_encode = [col for col in df_train.columns if col not in columns_to_exclude]
+df_train_pro = pd.get_dummies(df_train[columns_to_encode]).astype(int)
 
-# Función para entrenar el modelo
-def train_model(X_train, y_train, model_file, overwrite_model=False):
-    # Si el modelo ya existe y no queremos sobrescribir, cargar el modelo
-    if os.path.exists(model_file) and not overwrite_model:
-        logger.info("Loading existing model from %s", model_file)
-        model = xgb.XGBClassifier()
-        model.load_model(model_file)
-    else:
-        logger.info("Fitting model")
-        model = xgb.XGBClassifier()
-        model.fit(X_train, y_train)
-        
-        logger.info("Saving model to %s", model_file)
-        # Guardar el modelo en formato JSON
-        model.get_booster().save_model(model_file)
+print("Agregando la columna objetivo 'RENDIMIENTO_GLOBAL' al dataset procesado...")
+df_train_pro['RENDIMIENTO_GLOBAL'] = df_train['RENDIMIENTO_GLOBAL']
 
-    return model
+print("Cambiando el target a numérico...") 
+df_train_pro['RENDIMIENTO_GLOBAL'] = df_train_pro['RENDIMIENTO_GLOBAL'].map({
+    "bajo": 0, "medio-bajo": 1, "medio-alto": 2, "alto": 3
+})
 
-# Función principal
-def main(data_file, model_file, overwrite_model):
-    # Cargar los datos
-    data = load_data(data_file)
+print("Concatenando y normalizando las columnas numéricas...")
+df_train_pro = pd.concat([df_train[['ID','PERIODO','ESTU_PRGM_ACADEMICO']], df_train_pro], axis=1)
+encoder = LabelEncoder()
+df_train_pro['ESTU_PRGM_ACADEMICO'] = encoder.fit_transform(df_train_pro['ESTU_PRGM_ACADEMICO'])
+scaler = MinMaxScaler()
+df_train_pro['PERIODO'] = scaler.fit_transform(df_train_pro[['PERIODO']])
+df_train_pro['ESTU_PRGM_ACADEMICO'] = scaler.fit_transform(df_train_pro[['ESTU_PRGM_ACADEMICO']])
 
-    # Convertir las columnas categóricas y la columna objetivo
-    data, label_encoders = preprocess_data(data)
+print("Dividiendo los datos en conjuntos de entrenamiento y prueba...")
+X = df_train_pro.drop('RENDIMIENTO_GLOBAL', axis=1)
+y = df_train_pro['RENDIMIENTO_GLOBAL']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Separar características (X) y variable objetivo (y)
-    X = data.drop(columns='RENDIMIENTO_GLOBAL')
-    y = data['RENDIMIENTO_GLOBAL']
+print("Entrenando el modelo...")
+model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+model.fit(X_train, y_train)
 
-    # Dividir los datos en conjunto de entrenamiento y prueba
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+print("Evaluando el modelo...")
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Precisión del modelo: {accuracy * 100:.2f}%')
 
-    # Entrenar el modelo
-    model = train_model(X_train, y_train, model_file, overwrite_model)
-
-if __name__ == "__main__":
-    # Argumentos para el script
-    parser = argparse.ArgumentParser(description="Train XGBoost model")
-    parser.add_argument('--data_file', type=str, required=True, help="Path to the training data file")
-    parser.add_argument('--model_file', type=str, required=True, help="Path to save the trained model")
-    parser.add_argument('--overwrite_model', action='store_true', help="Overwrite existing model")
-    
-    args = parser.parse_args()
-
-    # Crear el directorio para guardar el modelo si no existe
-    if not os.path.exists(os.path.dirname(args.model_file)):
-        os.makedirs(os.path.dirname(args.model_file))
-
-    main(args.data_file, args.model_file, args.overwrite_model)
+print("Guardando el modelo...")
+joblib.dump(model, '../data/xgb_model.pkl')
+print("Modelo guardado en data/xgb_model.pkl")
