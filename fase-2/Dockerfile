@@ -1,18 +1,18 @@
 # Usar una imagen base de Python
-FROM python:3.10
+FROM python:3.10-slim
 
-# Establecer el directorio de trabajo
+# Establecer el directorio de trabajo en el contenedor
 WORKDIR /app
 
-# Copiar los archivos necesarios al contenedor
-COPY requirements.txt .
-COPY scripts/train.py .
+# Copiar el archivo requirements.txt
+COPY scripts/requirements.txt .
 
 # Instalar las dependencias
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Crear un directorio para los datos
-RUN mkdir data
+# Copiar el directorio data y scripts al contenedor
+COPY data ./data
+COPY scripts ./scripts
 
-# Definir el comando por defecto
-ENTRYPOINT ["python", "train.py"]
+# Establecer el comando por defecto para iniciar una shell interactiva
+CMD ["bash"]

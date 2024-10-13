@@ -1,8 +1,3 @@
-import subprocess
-
-print("Instalando los paquetes desde el archivo requirements.txt")
-subprocess.call(['pip', 'install', '-r', 'requirements.txt'])
-
 print("Importando librerías")
 import pandas as pd
 import xgboost as xgb
@@ -13,7 +8,7 @@ from sklearn.preprocessing import LabelEncoder
 import joblib
 
 print("Cargando los datos desde el archivo CSV...")
-df_train = pd.read_csv('../data/train.csv')
+df_train = pd.read_csv('./data/train.csv')
 
 print("Rellenando valores faltantes con la moda de cada columna...")
 columns_with_missing_values = [
@@ -55,7 +50,7 @@ y = df_train_pro['RENDIMIENTO_GLOBAL']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 print("Entrenando el modelo...")
-model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+model = xgb.XGBClassifier(eval_metric='logloss')
 model.fit(X_train, y_train)
 
 print("Evaluando el modelo...")
@@ -64,5 +59,5 @@ accuracy = accuracy_score(y_test, y_pred)
 print(f'Precisión del modelo: {accuracy * 100:.2f}%')
 
 print("Guardando el modelo...")
-joblib.dump(model, '../data/xgb_model.pkl')
+joblib.dump(model, './data/xgb_model.pkl')
 print("Modelo guardado en data/xgb_model.pkl")

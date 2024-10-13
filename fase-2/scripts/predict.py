@@ -1,8 +1,3 @@
-import subprocess
-
-print("Instalando los paquetes desde el archivo requirements.txt")
-subprocess.call(['pip', 'install', '-r', 'requirements.txt'])
-
 print("Importando librerías")
 import pandas as pd
 import joblib
@@ -11,10 +6,10 @@ from sklearn.preprocessing import LabelEncoder
 import xgboost as xgb
 
 print("Cargando el modelo entrenado...")
-model = joblib.load('../data/xgb_model.pkl')
+model = joblib.load('./data/xgb_model.pkl')
 
 print("Cargando los nuevos datos desde el archivo CSV...")
-df_new = pd.read_csv('../data/test.csv')
+df_new = pd.read_csv('./data/test.csv')
 
 print("Rellenando valores faltantes con la moda de cada columna...")
 columns_with_missing_values = [
@@ -56,6 +51,6 @@ submission = pd.DataFrame({
     'ID': df_new_pro['ID'], 
     'RENDIMIENTO_GLOBAL': y_pred 
 })
-submission.to_csv('../data/submission.csv', index=False)
+submission.to_csv('./data/submission.csv', index=False)
 
 print("Predicciones guardadas en data/submission.csv")
