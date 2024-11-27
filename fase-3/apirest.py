@@ -1,7 +1,22 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, jsonify, Response
+
 import subprocess
+import pandas as pd
 
 app = Flask(__name__)
+
+# Ruta para la página de inicio
+@app.route('/')
+def index():
+    return """
+    <h1>Bienvenido a la API</h1>
+    <p>Utiliza los siguientes endpoints:</p>
+    <ul>
+        <li><b>/train</b>: Entrena el modelo</li>
+        <li><b>/predict</b>: Realiza predicciones</li>
+    </ul>
+    <p>Visita <a href="/train">/train</a> para entrenar o <a href="/predict">/predict</a> para predecir.</p>
+    """
 
 # Endpoint para entrenar el modelo con logs en tiempo real
 @app.route('/train', methods=['GET'])
@@ -14,7 +29,7 @@ def train():
             stderr=subprocess.STDOUT
         )
         for line in iter(process.stdout.readline, b""):  # Itera sobre cada línea de salida
-            yield f"data: {line.decode('utf-8')}\n\n"  # Envia logs al cliente en formato SSE
+            yield f"Proceso: {line.decode('utf-8')}\n\n"  # Envía logs al cliente en formato SSE
         process.stdout.close()
         process.wait()
 
@@ -31,9 +46,16 @@ def make_prediction():
             stderr=subprocess.STDOUT
         )
         for line in iter(process.stdout.readline, b""):  # Itera sobre cada línea de salida
-            yield f"data: {line.decode('utf-8')}\n\n"  # Envia logs al cliente en formato SSE
+            yield f"Proceso: {line.decode('utf-8')}\n\n"  # Envía logs al cliente en formato SSE
         process.stdout.close()
         process.wait()
+
+        yield "Proceso: Cargando predicciones...\n\n"
+
+        # Leer el archivo de predicciones y convertirlo a JSON
+        df = pd.read_csv('/app/data/submission.csv')
+        json_data = df.to_json(orient='records')  # Convierte el DataFrame a una lista de diccionarios en JSON
+        yield f"data: {json_data}\n\n"
 
     try:
         return Response(generate_logs(), mimetype='text/event-stream')

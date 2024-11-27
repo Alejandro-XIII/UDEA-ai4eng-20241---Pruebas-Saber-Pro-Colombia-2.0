@@ -48,6 +48,30 @@ Segunda parte del modelo de clasificación para predecir el desempeño de estudi
    Cuando hayas terminado, puedes salir del contenedor con:
     ```bash
    exit
+## FASE 3. Despliegue de API REST:
+
+1. **Descargar los archivos `train.csv` y `test.csv`**  
+   Descarga los archivos de entrenamiento y prueba desde la misma página de la fase 1 en [Kaggle](https://www.kaggle.com/competitions/udea-ai4eng-20241) y colócalos en la carpeta `fase-3/data`.
+
+2. **Construir la imagen Docker**  
+   Abre una terminal en la carpeta `fase-3` y ejecuta el siguiente comando para construir la imagen Docker:
+   ```bash
+   docker build -t my_api_model .
+3. **Ejecutar el contenedor Docker**  
+   Corre el siguiente comando para crear e iniciar el contenedor Docker, mapeando el puerto 5000:
+   ```bash
+   docker run -p 5000:5000 -it my_api_model
+4. **Interactuar con la API REST**  
+   - Para acceder a la página principal con la descripción de los endpoints:  
+     [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
+   - Para entrenar el modelo:  
+     [http://127.0.0.1:5000/train](http://127.0.0.1:5000/train)
+   - Para realizar predicciones:  
+     [http://127.0.0.1:5000/predict](http://127.0.0.1:5000/predict)
+
+5. **Finalizar el contenedor**  
+   Cuando hayas terminado, puedes detener el API con **Ctrl + c**
+
 ## Autor
 -Diego Alejandro Castañeda Ossa - [Alejandro-XIII](https://github.com/Alejandro-XIII)
 -CC 1036656438
