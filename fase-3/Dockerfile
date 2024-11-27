@@ -10,6 +10,7 @@ COPY apirest.py /app/
 COPY client.py /app/
 COPY scripts/train.py /app/scripts/
 COPY scripts/predict.py /app/scripts/
+COPY data /app/data/
 
 # Expone el puerto de la API
 EXPOSE 5000
